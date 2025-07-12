@@ -1,4 +1,4 @@
-FROM python:3.10.0-slim
+FROM python:3.10.12-slim
 
 WORKDIR /app
 
@@ -18,8 +18,8 @@ RUN pip install --upgrade pip setuptools wheel && \
 # Copy application files
 COPY . .
 
-# Expose port
+# Expose port (Render will set PORT env var)
 EXPOSE 5000
 
-# Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"] 
+# Run the application with PORT from environment
+CMD gunicorn --bind 0.0.0.0:$PORT app:app 
