@@ -1,7 +1,7 @@
 services:
   - type: web
     name: tapcheck-api
-    env: python
+    env: docker
     plan: free
-    buildCommand: chmod +x build.sh && ./build.sh
-    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app 
+    dockerfilePath: ./Dockerfile
+    dockerContext: . 
