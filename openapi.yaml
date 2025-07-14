@@ -1,0 +1,167 @@
+openapi: 3.0.0
+info:
+  title: Tapcheck Prediction API
+  description: Machine learning API for predicting customer conversion probability
+  version: 1.0.0
+  contact:
+    name: API Support
+    url: https://github.com/elsakra/render-api-tc
+
+servers:
+  - url: https://render-api-tc.onrender.com
+    description: Production server
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Check if the API is running and the model is loaded
+      operationId: healthCheck
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  model:
+                    type: string
+                    example: tapcheck_v4
+
+  /predict:
+    post:
+      summary: Predict Conversion Probability
+      description: Generate a conversion probability prediction for a potential customer
+      operationId: predict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - Global Employees
+                - Eligible Employees
+                - Industry
+              properties:
+                Global Employees:
+                  type: integer
+                  description: Total number of employees globally
+                  example: 500
+                Eligible Employees:
+                  type: integer
+                  description: Number of employees eligible for the service
+                  example: 400
+                Industry:
+                  type: string
+                  description: Company's primary industry
+                  example: Technology
+                Predicted Eligible Employees:
+                  type: integer
+                  description: Estimated eligible employees
+                  example: 380
+                  default: 0
+                Revenue in Last 30 Days:
+                  type: integer
+                  description: Revenue in the last 30 days
+                  example: 50000
+                  default: 0
+                Territory:
+                  type: string
+                  description: Geographic territory
+                  example: North America
+                  default: missing
+                Billing State/Province:
+                  type: string
+                  description: Billing location
+                  example: CA
+                  default: missing
+                Type:
+                  type: string
+                  description: Company type
+                  example: Enterprise
+                  default: missing
+                Vertical:
+                  type: string
+                  description: Business vertical
+                  example: Software
+                  default: missing
+                Are they using a Competitor?:
+                  type: string
+                  description: Competitor usage status
+                  example: No
+                  default: missing
+                Web Technologies:
+                  type: string
+                  description: Technologies used
+                  example: React, Node.js
+                  default: missing
+                Company Payroll Software:
+                  type: string
+                  description: Current payroll software
+                  example: ADP
+                  default: missing
+                Marketing Source:
+                  type: string
+                  description: How they heard about us
+                  example: Direct
+                  default: missing
+                Strategic Account:
+                  type: string
+                  description: Strategic account status
+                  example: Yes
+                  default: missing
+      responses:
+        '200':
+          description: Successful prediction
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  probability_closed_won:
+                    type: number
+                    format: float
+                    description: Probability of conversion (0-1)
+                    example: 0.9865
+                  tier:
+                    type: string
+                    description: Tier classification
+                    enum: [A, B, C, D]
+                    example: A
+                  tier_description:
+                    type: string
+                    description: Human-readable tier description
+                    example: Top 25%
+                  employee_count:
+                    type: integer
+                    description: Employee count used for classification
+                    example: 400
+                  status:
+                    type: string
+                    description: Request status
+                    example: success
+        '400':
+          description: Bad Request - Missing required fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Missing: Eligible Employees"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Internal server error 
