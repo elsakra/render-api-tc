@@ -71,6 +71,13 @@ The API automatically handles hyphens (`-`) as missing values, which is common i
 
 For numeric fields, these values will be converted to `0`. For string fields, they will be converted to `"missing"`.
 
+**Quoted Numbers**: The API intelligently handles quoted numbers in numeric fields. For example:
+- `"Predicted Eligible Employees": "100"` → converted to `100`
+- `"Predicted Eligible Employees": 100` → remains as `100`
+- `"Predicted Eligible Employees": "-"` → converted to `0`
+
+This allows you to safely quote all values in your JSON to handle hyphens without breaking numeric field processing.
+
 **Special handling for required fields**:
 - `Global Employees` and `Eligible Employees`: If set to hyphen (`-`), will be converted to `0`
 - `Industry`: If set to hyphen (`-`), will be converted to `"Other"`

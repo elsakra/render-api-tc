@@ -25,16 +25,17 @@ def clean_value(value, default=None):
     if str_value in ['-', '--', 'null', 'NULL', 'None', 'none', '']:
         return default
     
-    # For numeric fields, also check if it's a valid number
+    # For numeric fields, try to convert any value to a number
     if default == 0:  # Numeric field
         try:
-            # Try to convert to number, but still check for hyphen first
-            if str_value == '-':
-                return default
+            # This will handle both actual numbers and string representations of numbers
+            # e.g., 100 → 100.0, "100" → 100.0, "100.5" → 100.5
             return float(str_value)
         except (ValueError, TypeError):
+            # If conversion fails, return the default
             return default
     
+    # For non-numeric fields, return the original value
     return value
 
 def render_markdown_as_html(markdown_file):
