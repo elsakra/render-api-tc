@@ -243,6 +243,122 @@ For issues or questions, please contact the development team or create an issue 
 Current API Version: 1.0.0
 Model Version: tapcheck_v4
 
+## Analytics Endpoints (New)
+
+The API now includes built-in analytics to monitor tier distributions and diagnose issues.
+
+### 3. Tier Distribution Analysis
+
+Check current tier distribution across all logged predictions.
+
+**Endpoint**: `GET /analytics/tier-distribution`
+
+**Response**:
+```json
+{
+    "total_predictions": 1250,
+    "overall_distribution": {
+        "A": {"count": 450, "percentage": 36.0},
+        "B": {"count": 300, "percentage": 24.0},
+        "C": {"count": 300, "percentage": 24.0},
+        "D": {"count": 200, "percentage": 16.0}
+    },
+    "by_employee_range": {
+        "<100": {
+            "count": 500,
+            "tier_distribution": {
+                "A": {"count": 200, "percentage": 40.0},
+                "B": {"count": 125, "percentage": 25.0},
+                "C": {"count": 100, "percentage": 20.0},
+                "D": {"count": 75, "percentage": 15.0}
+            },
+            "probability_stats": {
+                "min": 0.0234,
+                "max": 0.8765,
+                "mean": 0.2345,
+                "median": 0.1987
+            }
+        }
+    },
+    "log_period": {
+        "oldest": "2024-01-15T10:30:00",
+        "newest": "2024-01-15T14:45:00"
+    }
+}
+```
+
+### 4. Probability Quartiles
+
+Get current probability quartiles for recalibrating tier thresholds.
+
+**Endpoint**: `GET /analytics/probability-quartiles`
+
+**Response**:
+```json
+{
+    "total_predictions": 1250,
+    "quartiles_by_range": {
+        "<100": {
+            "count": 500,
+            "q25": 0.0987,
+            "q50": 0.1987,
+            "q75": 0.3456,
+            "current_thresholds": {
+                "A": 0.1986,
+                "B": 0.1249,
+                "C": 0.0577
+            },
+            "recommended_thresholds": {
+                "A": 0.3456,
+                "B": 0.1987,
+                "C": 0.0987
+            }
+        }
+    },
+    "recommendation": "Update tier thresholds to match the recommended values for proper 25% distribution"
+}
+```
+
+### 5. Recent Predictions
+
+View recent prediction logs for debugging.
+
+**Endpoint**: `GET /analytics/recent-predictions?limit=100`
+
+**Query Parameters**:
+- `limit` (optional, default: 100, max: 1000) - Number of recent predictions to return
+
+**Response**:
+```json
+{
+    "count": 100,
+    "predictions": [
+        {
+            "timestamp": "2024-01-15T14:45:00",
+            "request": {
+                "global_employees": 150,
+                "eligible_employees": 120,
+                "industry": "Technology",
+                "territory": "West",
+                "type": "Enterprise"
+            },
+            "response": {
+                "probability": 0.3456,
+                "tier": "A",
+                "employee_count": 120
+            }
+        }
+    ]
+}
+```
+
+## Monitoring Best Practices
+
+1. **Regular Checks**: Monitor `/analytics/tier-distribution` weekly
+2. **Alert Threshold**: If Tier A exceeds 35%, recalibration is needed
+3. **Recalibration**: Use `/analytics/probability-quartiles` to get new thresholds
+4. **Log Retention**: API keeps last 10,000 predictions automatically
+
 ---
 
 Last Updated: July 2024 
