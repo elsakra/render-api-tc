@@ -42,26 +42,38 @@ Generate a conversion probability prediction for a potential customer.
 #### Request Body
 
 **Required Fields**:
-| Field | Type | Description |
-|-------|------|-------------|
-| `Global Employees` | integer | Total number of employees globally |
-| `Eligible Employees` | integer | Number of employees eligible for the service |
-| `Industry` | string | Company's primary industry |
+
+- `Global Employees` (integer)
+  - Total number of employees globally
+- `Eligible Employees` (integer) 
+  - Number of employees eligible for the service
+- `Industry` (string)
+  - Company's primary industry
 
 **Optional Fields**:
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `Predicted Eligible Employees` | integer | 0 | Estimated eligible employees |
-| `Revenue in Last 30 Days` | integer | 0 | Revenue in the last 30 days |
-| `Territory` | string | "missing" | Geographic territory |
-| `Billing State/Province` | string | "missing" | Billing location |
-| `Type` | string | "missing" | Company type (e.g., "Enterprise", "SMB") |
-| `Vertical` | string | "missing" | Business vertical |
-| `Are they using a Competitor?` | string | "missing" | Competitor usage status |
-| `Web Technologies` | string | "missing" | Technologies used |
-| `Company Payroll Software` | string | "missing" | Current payroll software |
-| `Marketing Source` | string | "missing" | How they heard about us |
-| `Strategic Account` | string | "missing" | Strategic account status |
+
+- `Predicted Eligible Employees` (integer, default: 0)
+  - Estimated eligible employees
+- `Revenue in Last 30 Days` (integer, default: 0)
+  - Revenue in the last 30 days
+- `Territory` (string, default: "missing")
+  - Geographic territory
+- `Billing State/Province` (string, default: "missing")
+  - Billing location
+- `Type` (string, default: "missing")
+  - Company type (e.g., "Enterprise", "SMB")
+- `Vertical` (string, default: "missing")
+  - Business vertical
+- `Are they using a Competitor?` (string, default: "missing")
+  - Competitor usage status
+- `Web Technologies` (string, default: "missing")
+  - Technologies used
+- `Company Payroll Software` (string, default: "missing")
+  - Current payroll software
+- `Marketing Source` (string, default: "missing")
+  - How they heard about us
+- `Strategic Account` (string, default: "missing")
+  - Strategic account status
 
 #### Response
 
