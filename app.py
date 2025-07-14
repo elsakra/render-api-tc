@@ -201,7 +201,7 @@ def predict():
             'Predicted Eligible Employees': clean_value(data.get('Predicted Eligible Employees'), 0),
             'Revenue in Last 30 Days': clean_value(data.get('Revenue in Last 30 Days'), 0),
             'Territory': clean_value(data.get('Territory'), 'missing'),
-            'Industry': clean_value(data.get('Industry'), 'missing'),
+            'Industry': clean_value(data.get('Industry'), 'Other') if data.get('Industry') == '-' else data.get('Industry', 'missing'),
             'Billing State/Province': clean_value(data.get('Billing State/Province'), 'missing'),
             'Type': clean_value(data.get('Type'), 'missing'),
             'Vertical': clean_value(data.get('Vertical'), 'missing'),
@@ -211,14 +211,6 @@ def predict():
             'Marketing Source': clean_value(data.get('Marketing Source'), 'missing'),
             'Strategic Account': clean_value(data.get('Strategic Account'), 'missing')
         }
-        
-        # Validate required fields aren't just hyphens
-        if features['Global Employees'] == 0 and data.get('Global Employees') == '-':
-            return jsonify({'error': 'Global Employees cannot be empty (hyphen)'}), 400
-        if features['Eligible Employees'] == 0 and data.get('Eligible Employees') == '-':
-            return jsonify({'error': 'Eligible Employees cannot be empty (hyphen)'}), 400
-        if features['Industry'] == 'missing' and data.get('Industry') == '-':
-            return jsonify({'error': 'Industry cannot be empty (hyphen)'}), 400
         
         # Make prediction
         df = pd.DataFrame([features])

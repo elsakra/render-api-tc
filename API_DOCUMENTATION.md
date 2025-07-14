@@ -71,7 +71,9 @@ The API automatically handles hyphens (`-`) as missing values, which is common i
 
 For numeric fields, these values will be converted to `0`. For string fields, they will be converted to `"missing"`.
 
-**Note**: Required fields (`Global Employees`, `Eligible Employees`, `Industry`) cannot be hyphens and will return an error if only a hyphen is provided.
+**Special handling for required fields**:
+- `Global Employees` and `Eligible Employees`: If set to hyphen (`-`), will be converted to `0`
+- `Industry`: If set to hyphen (`-`), will be converted to `"Other"`
 
 #### Response
 

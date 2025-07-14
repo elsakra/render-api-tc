@@ -1,0 +1,16 @@
+{
+  "_comment": "Example showing Salesforce data with hyphens for missing values",
+  "Global Employees": "-",
+  "Eligible Employees": "-", 
+  "Industry": "-",
+  "Predicted Eligible Employees": "-",
+  "Territory": "Micro - Healthcare",
+  "Billing State/Province": "MN",
+  "Type": "Employer",
+  "Vertical": "Healthcare",
+  "Are they using a Competitor?": "-",
+  "Web Technologies": "Microsoft Exchange Online; Youtube; Qualaroo",
+  "Company Payroll Software": "ADP Workforce API",
+  "Marketing Source": "-",
+  "Strategic Account": "false"
+} 
