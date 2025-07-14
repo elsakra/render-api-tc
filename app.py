@@ -360,16 +360,7 @@ def predict():
             'tier_description': {'A': 'Top 25%', 'B': 'High', 'C': 'Medium', 'D': 'Low'}[tier],
             'employee_count': int(employees),
             'explanation': explanation,
-            'status': 'success',
-            'debug': {
-                'parsed_global_employees': features['Global Employees'] if not pd.isna(features['Global Employees']) else None,
-                'parsed_eligible_employees': features['Eligible Employees'] if not pd.isna(features['Eligible Employees']) else None,
-                'employee_count_used': int(employees),
-                'raw_inputs': {
-                    'global_employees': data.get('Global Employees'),
-                    'eligible_employees': data.get('Eligible Employees')
-                }
-            }
+            'status': 'success'
         }
         
         # Log with all features that were actually used
