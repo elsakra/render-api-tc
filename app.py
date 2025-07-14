@@ -115,7 +115,7 @@ def log_prediction(request_data, response_data, employee_count, features_dict=No
     if len(prediction_log) % 10 == 0:
         threading.Thread(target=save_logs).start()
 
-def clean_value(value, default=None):
+def clean_value(value, default=None, field_name=None):
     """Clean incoming values, treating hyphens as null/missing"""
     # Handle various representations of missing data
     if value is None:
@@ -128,12 +128,16 @@ def clean_value(value, default=None):
     if str_value in ['-', '--', 'null', 'NULL', 'None', 'none', '']:
         return default
     
+    # Special handling for eligible_employees - treat "0" as missing
+    if field_name == 'Eligible Employees' and str_value == '0':
+        return np.nan
+    
     # For numeric fields, try to convert any value to a number
     if pd.isna(default):  # Numeric field (np.nan as default)
         try:
-            # This will handle both actual numbers and string representations of numbers
-            # e.g., 100 → 100.0, "100" → 100.0, "100.5" → 100.5
-            return float(str_value)
+            # Remove commas from numbers (e.g., "10,000" -> "10000")
+            clean_str = str_value.replace(',', '')
+            return float(clean_str)
         except (ValueError, TypeError):
             # If conversion fails, return NaN for proper imputation
             return np.nan
@@ -304,10 +308,10 @@ def predict():
         
         # Prepare all 14 features with hyphen handling
         features = {
-            'Global Employees': clean_value(data.get('Global Employees'), np.nan),
-            'Eligible Employees': clean_value(data.get('Eligible Employees'), np.nan),
-            'Predicted Eligible Employees': clean_value(data.get('Predicted Eligible Employees'), np.nan),
-            'Revenue in Last 30 Days': clean_value(data.get('Revenue in Last 30 Days'), np.nan),
+            'Global Employees': clean_value(data.get('Global Employees'), np.nan, 'Global Employees'),
+            'Eligible Employees': clean_value(data.get('Eligible Employees'), np.nan, 'Eligible Employees'),
+            'Predicted Eligible Employees': clean_value(data.get('Predicted Eligible Employees'), np.nan, 'Predicted Eligible Employees'),
+            'Revenue in Last 30 Days': clean_value(data.get('Revenue in Last 30 Days'), np.nan, 'Revenue in Last 30 Days'),
             'Territory': clean_value(data.get('Territory'), 'missing'),
             'Industry': clean_value(data.get('Industry'), 'Other') if data.get('Industry') == '-' else data.get('Industry', 'missing'),
             'Billing State/Province': clean_value(data.get('Billing State/Province'), 'missing'),
@@ -356,7 +360,16 @@ def predict():
             'tier_description': {'A': 'Top 25%', 'B': 'High', 'C': 'Medium', 'D': 'Low'}[tier],
             'employee_count': int(employees),
             'explanation': explanation,
-            'status': 'success'
+            'status': 'success',
+            'debug': {
+                'parsed_global_employees': features['Global Employees'] if not pd.isna(features['Global Employees']) else None,
+                'parsed_eligible_employees': features['Eligible Employees'] if not pd.isna(features['Eligible Employees']) else None,
+                'employee_count_used': int(employees),
+                'raw_inputs': {
+                    'global_employees': data.get('Global Employees'),
+                    'eligible_employees': data.get('Eligible Employees')
+                }
+            }
         }
         
         # Log with all features that were actually used
