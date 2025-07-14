@@ -1,14 +1,162 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 import pandas as pd
 import numpy as np
 import pickle
 import os
+import markdown
+from markupsafe import Markup
 
 app = Flask(__name__)
 
 # Load model at startup
 with open('tapcheck_v4_model.pkl', 'rb') as f:
     model = pickle.load(f)
+
+def render_markdown_as_html(markdown_file):
+    """Convert markdown file to HTML with styling"""
+    try:
+        with open(markdown_file, 'r') as f:
+            content = f.read()
+        
+        # Convert markdown to HTML
+        html_content = markdown.markdown(content, extensions=['tables', 'fenced_code', 'codehilite'])
+        
+        # Wrap in HTML template with styling
+        html_template = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Tapcheck Prediction API Documentation</title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+                body {{
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 1000px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background-color: #f5f5f5;
+                }}
+                .content {{
+                    background-color: white;
+                    padding: 40px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }}
+                h1, h2, h3, h4 {{
+                    color: #2c3e50;
+                    margin-top: 30px;
+                }}
+                h1 {{
+                    border-bottom: 3px solid #3498db;
+                    padding-bottom: 10px;
+                }}
+                h2 {{
+                    border-bottom: 1px solid #e0e0e0;
+                    padding-bottom: 8px;
+                }}
+                code {{
+                    background-color: #f4f4f4;
+                    padding: 2px 4px;
+                    border-radius: 3px;
+                    font-family: 'Consolas', 'Monaco', monospace;
+                }}
+                pre {{
+                    background-color: #f8f8f8;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 4px;
+                    padding: 15px;
+                    overflow-x: auto;
+                }}
+                pre code {{
+                    background-color: transparent;
+                    padding: 0;
+                }}
+                table {{
+                    border-collapse: collapse;
+                    width: 100%;
+                    margin: 20px 0;
+                }}
+                th, td {{
+                    border: 1px solid #ddd;
+                    padding: 12px;
+                    text-align: left;
+                }}
+                th {{
+                    background-color: #f2f2f2;
+                    font-weight: bold;
+                }}
+                tr:nth-child(even) {{
+                    background-color: #f9f9f9;
+                }}
+                a {{
+                    color: #3498db;
+                    text-decoration: none;
+                }}
+                a:hover {{
+                    text-decoration: underline;
+                }}
+                .nav {{
+                    margin-bottom: 30px;
+                    padding: 15px;
+                    background-color: #ecf0f1;
+                    border-radius: 4px;
+                }}
+                .nav a {{
+                    margin-right: 20px;
+                    font-weight: 500;
+                }}
+                .footer {{
+                    margin-top: 50px;
+                    padding-top: 20px;
+                    border-top: 1px solid #e0e0e0;
+                    text-align: center;
+                    color: #666;
+                    font-size: 0.9em;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="content">
+                <div class="nav">
+                    <a href="/">Home</a>
+                    <a href="/docs">API Documentation</a>
+                    <a href="/docs/openapi">OpenAPI Spec</a>
+                    <a href="/health">Health Check</a>
+                </div>
+                {html_content}
+                <div class="footer">
+                    Tapcheck Prediction API | <a href="https://render-api-tc.onrender.com">https://render-api-tc.onrender.com</a>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        return html_template
+    except Exception as e:
+        return f"<h1>Error loading documentation</h1><p>{str(e)}</p>"
+
+@app.route('/')
+def index():
+    """Serve the README as the landing page"""
+    return render_markdown_as_html('README.md')
+
+@app.route('/docs')
+def docs():
+    """Serve the full API documentation"""
+    return render_markdown_as_html('API_DOCUMENTATION.md')
+
+@app.route('/docs/openapi')
+def openapi_spec():
+    """Serve the OpenAPI specification"""
+    try:
+        with open('openapi.yaml', 'r') as f:
+            content = f.read()
+        return Response(content, mimetype='text/yaml')
+    except:
+        return jsonify({'error': 'OpenAPI spec not found'}), 404
 
 @app.route('/predict', methods=['POST'])
 def predict():
