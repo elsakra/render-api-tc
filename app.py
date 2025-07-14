@@ -273,7 +273,17 @@ def predict():
         proba = model.predict_proba(df)[0][1]
         
         # Assign tier based on employee count and quartiles
-        employees = features['Eligible Employees'] or features['Global Employees']
+        # Handle NaN values properly
+        eligible = features['Eligible Employees']
+        global_emp = features['Global Employees']
+        
+        if pd.notna(eligible):
+            employees = eligible
+        elif pd.notna(global_emp):
+            employees = global_emp
+        else:
+            employees = 0  # Default if both are missing
+        
         if employees >= 3000:
             tier = 'A' if proba > 0.1704 else 'B' if proba > 0.0577 else 'C' if proba > 0.0532 else 'D'
         elif employees >= 1000:
@@ -289,7 +299,7 @@ def predict():
             'probability_closed_won': round(proba, 4),
             'tier': tier,
             'tier_description': {'A': 'Top 25%', 'B': 'High', 'C': 'Medium', 'D': 'Low'}[tier],
-            'employee_count': employees,
+            'employee_count': int(employees),
             'status': 'success'
         }
         
@@ -517,7 +527,17 @@ def predict_with_explanation():
         proba = model.predict_proba(df)[0][1]
         
         # Assign tier based on employee count and quartiles
-        employees = features['Eligible Employees'] or features['Global Employees']
+        # Handle NaN values properly
+        eligible = features['Eligible Employees']
+        global_emp = features['Global Employees']
+        
+        if pd.notna(eligible):
+            employees = eligible
+        elif pd.notna(global_emp):
+            employees = global_emp
+        else:
+            employees = 0  # Default if both are missing
+            
         if employees >= 3000:
             tier = 'A' if proba > 0.1704 else 'B' if proba > 0.0577 else 'C' if proba > 0.0532 else 'D'
         elif employees >= 1000:
@@ -536,7 +556,7 @@ def predict_with_explanation():
             'probability_closed_won': round(proba, 4),
             'tier': tier,
             'tier_description': {'A': 'Top 25%', 'B': 'High', 'C': 'Medium', 'D': 'Low'}[tier],
-            'employee_count': employees,
+            'employee_count': int(employees),
             'explanation': explanations,
             'status': 'success'
         }
