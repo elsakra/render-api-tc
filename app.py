@@ -304,6 +304,250 @@ def predict():
 def health():
     return jsonify({'status': 'healthy', 'model': 'tapcheck_v4'})
 
+def get_prediction_explanation(features, proba, tier):
+    """Generate human-readable explanations for predictions"""
+    
+    explanations = {
+        'factors': [],
+        'summary': '',
+        'recommendations': []
+    }
+    
+    # Employee size analysis
+    employees = features.get('Eligible Employees', 0) or features.get('Global Employees', 0)
+    if employees > 3000:
+        explanations['factors'].append({
+            'factor': 'Company Size',
+            'impact': 'positive',
+            'detail': f'Large enterprise with {employees:,} employees'
+        })
+    elif employees > 1000:
+        explanations['factors'].append({
+            'factor': 'Company Size', 
+            'impact': 'positive',
+            'detail': f'Mid-market company with {employees:,} employees'
+        })
+    elif employees < 50:
+        explanations['factors'].append({
+            'factor': 'Company Size',
+            'impact': 'negative', 
+            'detail': f'Small company with only {employees} employees'
+        })
+    
+    # Industry analysis (based on historical data)
+    industry = features.get('Industry', 'missing')
+    high_converting = {
+        'In-home Personal Care': 74.3,
+        'Transportation': 64.5,
+        'Healthcare': 43.7,
+        'Senior Living': 42.5,
+        'Healthcare - Rehabilitation': 43.7,
+        'Travel & Tourism': 41.8
+    }
+    low_converting = {
+        'Finance': 5.7,
+        'Education': 10.9,
+        'Retail': 14.5,
+        'Information Technology': 16.0,
+        'Insurance': 12.5,
+        'Real Estate': 15.8
+    }
+    
+    if industry in high_converting:
+        explanations['factors'].append({
+            'factor': 'Industry',
+            'impact': 'very_positive',
+            'detail': f'{industry} has {high_converting[industry]:.1f}% historical win rate'
+        })
+    elif industry in low_converting:
+        explanations['factors'].append({
+            'factor': 'Industry',
+            'impact': 'negative',
+            'detail': f'{industry} has only {low_converting[industry]:.1f}% historical win rate'
+        })
+    elif industry == 'Other' or industry == 'missing':
+        explanations['factors'].append({
+            'factor': 'Industry',
+            'impact': 'neutral',
+            'detail': 'Unknown industry - average conversion expected'
+        })
+    
+    # Payroll software analysis
+    payroll = features.get('Company Payroll Software', 'missing')
+    excellent_payroll = {
+        'Viventium': 81.7,
+        'Paychex API': 100.0,
+        'NCS': 100.0,
+        'QSRSoft Proliant': 89.5,
+        'isolved Network': 62.1
+    }
+    poor_payroll = {
+        'New Payroll': 6.0,
+        'UKG Pro': 5.4,
+        'Workday': 6.9,
+        'ADP Vantage HCM': 10.0,
+        'Kronos': 15.4
+    }
+    
+    if payroll in excellent_payroll:
+        explanations['factors'].append({
+            'factor': 'Payroll System',
+            'impact': 'very_positive',
+            'detail': f'{payroll} integration has {excellent_payroll[payroll]:.1f}% success rate'
+        })
+    elif payroll in poor_payroll:
+        explanations['factors'].append({
+            'factor': 'Payroll System',
+            'impact': 'very_negative',
+            'detail': f'{payroll} integration has only {poor_payroll[payroll]:.1f}% success rate'
+        })
+    elif payroll == 'ADP':
+        explanations['factors'].append({
+            'factor': 'Payroll System',
+            'impact': 'positive',
+            'detail': 'ADP is a common integration (37.1% win rate)'
+        })
+    
+    # Territory analysis
+    territory = features.get('Territory', 'missing')
+    if territory == 'missing':
+        explanations['factors'].append({
+            'factor': 'Territory',
+            'impact': 'positive',
+            'detail': 'Unassigned territory (48.5% win rate)'
+        })
+    elif territory == 'Enterprise Territory':
+        explanations['factors'].append({
+            'factor': 'Territory',
+            'impact': 'negative',
+            'detail': 'Enterprise territory has lower conversion (11.4%)'
+        })
+    elif 'Large' in territory:
+        explanations['factors'].append({
+            'factor': 'Territory',
+            'impact': 'neutral',
+            'detail': f'{territory} (31.4% historical win rate)'
+        })
+    
+    # Strategic account
+    if str(features.get('Strategic Account', '')).lower() == 'yes':
+        explanations['factors'].append({
+            'factor': 'Account Type',
+            'impact': 'positive',
+            'detail': 'Flagged as strategic account'
+        })
+    
+    # Competitor analysis
+    competitor = str(features.get('Are they using a Competitor?', 'missing')).lower()
+    if competitor == 'no':
+        explanations['factors'].append({
+            'factor': 'Competition',
+            'impact': 'positive',
+            'detail': 'Not using a competitor solution'
+        })
+    elif competitor == 'yes':
+        explanations['factors'].append({
+            'factor': 'Competition',
+            'impact': 'negative',
+            'detail': 'Currently using a competitor'
+        })
+    
+    # Generate summary based on tier and probability
+    if tier == 'A':
+        explanations['summary'] = f'Excellent prospect with {proba:.1%} win probability (Top 25%)'
+        explanations['recommendations'].append('Prioritize immediate outreach')
+        explanations['recommendations'].append('Assign to senior sales rep')
+        if payroll in excellent_payroll:
+            explanations['recommendations'].append(f'Emphasize {payroll} integration success stories')
+    elif tier == 'B':
+        explanations['summary'] = f'Good prospect with {proba:.1%} win probability'
+        explanations['recommendations'].append('Include in regular outreach cadence')
+        explanations['recommendations'].append('Qualify budget and timeline early')
+    elif tier == 'C':
+        explanations['summary'] = f'Average prospect with {proba:.1%} win probability'
+        explanations['recommendations'].append('Add to nurture campaign')
+        explanations['recommendations'].append('Monitor for trigger events')
+    else:
+        explanations['summary'] = f'Low priority with {proba:.1%} win probability'
+        explanations['recommendations'].append('Include in automated marketing only')
+        if payroll in poor_payroll:
+            explanations['recommendations'].append(f'Note: {payroll} integration is challenging')
+    
+    # Add specific recommendations based on factors
+    if employees > 1000 and proba > 0.5:
+        explanations['recommendations'].append('Large account with high probability - consider executive outreach')
+    
+    if industry in high_converting and proba < 0.3:
+        explanations['recommendations'].append(f'Despite being in {industry}, probability is low - investigate blockers')
+    
+    return explanations
+
+@app.route('/predict-with-explanation', methods=['POST'])
+def predict_with_explanation():
+    """Enhanced prediction endpoint with explanations"""
+    try:
+        data = request.get_json()
+        
+        # Check required fields
+        required = ['Global Employees', 'Eligible Employees', 'Industry']
+        for field in required:
+            if field not in data:
+                return jsonify({'error': f'Missing: {field}'}), 400
+        
+        # Prepare all 14 features with hyphen handling
+        features = {
+            'Global Employees': clean_value(data.get('Global Employees'), np.nan),
+            'Eligible Employees': clean_value(data.get('Eligible Employees'), np.nan),
+            'Predicted Eligible Employees': clean_value(data.get('Predicted Eligible Employees'), np.nan),
+            'Revenue in Last 30 Days': clean_value(data.get('Revenue in Last 30 Days'), np.nan),
+            'Territory': clean_value(data.get('Territory'), 'missing'),
+            'Industry': clean_value(data.get('Industry'), 'Other') if data.get('Industry') == '-' else data.get('Industry', 'missing'),
+            'Billing State/Province': clean_value(data.get('Billing State/Province'), 'missing'),
+            'Type': clean_value(data.get('Type'), 'missing'),
+            'Vertical': clean_value(data.get('Vertical'), 'missing'),
+            'Are they using a Competitor?': clean_value(data.get('Are they using a Competitor?'), 'missing'),
+            'Web Technologies': clean_value(data.get('Web Technologies'), 'missing'),
+            'Company Payroll Software': clean_value(data.get('Company Payroll Software'), 'missing'),
+            'Marketing Source': clean_value(data.get('Marketing Source'), 'missing'),
+            'Strategic Account': clean_value(data.get('Strategic Account'), 'missing')
+        }
+        
+        # Make prediction
+        df = pd.DataFrame([features])
+        proba = model.predict_proba(df)[0][1]
+        
+        # Assign tier based on employee count and quartiles
+        employees = features['Eligible Employees'] or features['Global Employees']
+        if employees >= 3000:
+            tier = 'A' if proba > 0.1704 else 'B' if proba > 0.0577 else 'C' if proba > 0.0532 else 'D'
+        elif employees >= 1000:
+            tier = 'A' if proba > 0.1479 else 'B' if proba > 0.0614 else 'C' if proba > 0.0499 else 'D'
+        elif employees >= 300:
+            tier = 'A' if proba > 0.1479 else 'B' if proba > 0.0799 else 'C' if proba > 0.0552 else 'D'
+        elif employees >= 100:
+            tier = 'A' if proba > 0.2174 else 'B' if proba > 0.1286 else 'C' if proba > 0.0577 else 'D'
+        else:
+            tier = 'A' if proba > 0.1986 else 'B' if proba > 0.1249 else 'C' if proba > 0.0577 else 'D'
+        
+        # Get explanations
+        explanations = get_prediction_explanation(features, proba, tier)
+        
+        response_data = {
+            'probability_closed_won': round(proba, 4),
+            'tier': tier,
+            'tier_description': {'A': 'Top 25%', 'B': 'High', 'C': 'Medium', 'D': 'Low'}[tier],
+            'employee_count': employees,
+            'explanation': explanations,
+            'status': 'success'
+        }
+        
+        log_prediction(data, response_data, employees)
+        
+        return jsonify(response_data)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/analytics/tier-distribution', methods=['GET'])
 def tier_distribution():
     """Get current tier distribution from logs"""

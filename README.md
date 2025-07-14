@@ -28,6 +28,18 @@ curl -X POST https://render-api-tc.onrender.com/predict \
   }'
 ```
 
+### Get Prediction with Explanation (NEW!)
+```bash
+curl -X POST https://render-api-tc.onrender.com/predict-with-explanation \
+  -H "Content-Type: application/json" \
+  -d '{
+    "Global Employees": 500,
+    "Eligible Employees": 400,
+    "Industry": "Healthcare",
+    "Company Payroll Software": "Viventium"
+  }'
+```
+
 ## Features
 
 - 🚀 Fast prediction response times

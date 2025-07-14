@@ -110,6 +110,87 @@ This allows you to safely quote all values in your JSON to handle hyphens withou
 }
 ```
 
+### 2.5 Prediction with Explanation (NEW)
+
+Generate a prediction with detailed explanations of contributing factors.
+
+**Endpoint**: `POST /predict-with-explanation`
+
+**Content-Type**: `application/json`
+
+#### Request Body
+
+Same as `/predict` endpoint - requires `Global Employees`, `Eligible Employees`, and `Industry`.
+
+#### Response
+
+**Success Response** (200 OK):
+```json
+{
+    "probability_closed_won": 0.7532,
+    "tier": "A",
+    "tier_description": "Top 25%",
+    "employee_count": 250,
+    "explanation": {
+        "summary": "Excellent prospect with 75.3% win probability (Top 25%)",
+        "factors": [
+            {
+                "factor": "Industry",
+                "impact": "very_positive",
+                "detail": "Healthcare has 43.7% historical win rate"
+            },
+            {
+                "factor": "Payroll System",
+                "impact": "very_positive",
+                "detail": "Viventium integration has 81.7% success rate"
+            },
+            {
+                "factor": "Company Size",
+                "impact": "positive",
+                "detail": "Mid-market company with 250 employees"
+            },
+            {
+                "factor": "Competition",
+                "impact": "positive",
+                "detail": "Not using a competitor solution"
+            },
+            {
+                "factor": "Territory",
+                "impact": "negative",
+                "detail": "Enterprise territory has lower conversion (11.4%)"
+            }
+        ],
+        "recommendations": [
+            "Prioritize immediate outreach",
+            "Assign to senior sales rep",
+            "Emphasize Viventium integration success stories"
+        ]
+    },
+    "status": "success"
+}
+```
+
+**Impact Levels**:
+- `very_positive`: Strong positive indicator (e.g., high-converting industry/payroll)
+- `positive`: Moderate positive indicator
+- `neutral`: Neither positive nor negative
+- `negative`: Moderate negative indicator
+- `very_negative`: Strong negative indicator (e.g., problematic payroll system)
+
+**Example Request**:
+```bash
+curl -X POST https://render-api-tc.onrender.com/predict-with-explanation \
+  -H "Content-Type: application/json" \
+  -d '{
+    "Global Employees": 250,
+    "Eligible Employees": 200,
+    "Industry": "Healthcare",
+    "Company Payroll Software": "Viventium",
+    "Territory": "Enterprise Territory",
+    "Are they using a Competitor?": "No"
+  }'
+```
+
 ## Tier Classification
 
 The API assigns tiers based on employee count and probability thresholds:
