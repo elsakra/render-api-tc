@@ -43,38 +43,23 @@ Generate a conversion probability prediction for a potential customer.
 
 **Required Fields**:
 
-- `Global Employees` (integer)
-  - Total number of employees globally
-- `Eligible Employees` (integer) 
-  - Number of employees eligible for the service
-- `Industry` (string)
-  - Company's primary industry
+- `Global Employees` (integer) - Total number of employees globally
+- `Eligible Employees` (integer) - Number of employees eligible for the service
+- `Industry` (string) - Company's primary industry
 
 **Optional Fields**:
 
-- `Predicted Eligible Employees` (integer, default: 0)
-  - Estimated eligible employees
-- `Revenue in Last 30 Days` (integer, default: 0)
-  - Revenue in the last 30 days
-- `Territory` (string, default: "missing")
-  - Geographic territory
-- `Billing State/Province` (string, default: "missing")
-  - Billing location
-- `Type` (string, default: "missing")
-  - Company type (e.g., "Enterprise", "SMB")
-- `Vertical` (string, default: "missing")
-  - Business vertical
-- `Are they using a Competitor?` (string, default: "missing")
-  - Competitor usage status
-- `Web Technologies` (string, default: "missing")
-  - Technologies used
-- `Company Payroll Software` (string, default: "missing")
-  - Current payroll software
-- `Marketing Source` (string, default: "missing")
-  - How they heard about us
-- `Strategic Account` (string, default: "missing")
-  - Strategic account status
-
+- `Predicted Eligible Employees` (integer, default: 0) - Estimated eligible employees
+- `Revenue in Last 30 Days` (integer, default: 0) - Revenue in the last 30 days
+- `Territory` (string, default: "missing") - Geographic territory
+- `Billing State/Province` (string, default: "missing") - Billing location
+- `Type` (string, default: "missing") - Company type (e.g., "Enterprise", "SMB")
+- `Vertical` (string, default: "missing") - Business vertical
+- `Are they using a Competitor?` (string, default: "missing") - Competitor usage status
+- `Web Technologies` (string, default: "missing") - Technologies used
+- `Company Payroll Software` (string, default: "missing") - Current payroll software
+- `Marketing Source` (string, default: "missing") - How they heard about us
+- `Strategic Account` (string, default: "missing") - Strategic account status
 #### Response
 
 **Success Response** (200 OK):
@@ -90,16 +75,11 @@ Generate a conversion probability prediction for a potential customer.
 
 **Response Fields**:
 
-- `probability_closed_won` (float)
-  - Probability of conversion (0-1)
-- `tier` (string) 
-  - Tier classification (A, B, C, or D)
-- `tier_description` (string)
-  - Human-readable tier description
-- `employee_count` (integer)
-  - Employee count used for classification
-- `status` (string)
-  - Request status
+- `probability_closed_won` (float) - Probability of conversion (0-1)
+- `tier` (string)  - Tier classification (A, B, C, or D)
+- `tier_description` (string) - Human-readable tier description
+- `employee_count` (integer) - Employee count used for classification
+- `status` (string) - Request status
 
 **Error Response** (400 Bad Request):
 ```json
