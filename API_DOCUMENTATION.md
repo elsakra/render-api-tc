@@ -89,13 +89,17 @@ Generate a conversion probability prediction for a potential customer.
 ```
 
 **Response Fields**:
-| Field | Type | Description |
-|-------|------|-------------|
-| `probability_closed_won` | float | Probability of conversion (0-1) |
-| `tier` | string | Tier classification (A, B, C, or D) |
-| `tier_description` | string | Human-readable tier description |
-| `employee_count` | integer | Employee count used for classification |
-| `status` | string | Request status |
+
+- `probability_closed_won` (float)
+  - Probability of conversion (0-1)
+- `tier` (string) 
+  - Tier classification (A, B, C, or D)
+- `tier_description` (string)
+  - Human-readable tier description
+- `employee_count` (integer)
+  - Employee count used for classification
+- `status` (string)
+  - Request status
 
 **Error Response** (400 Bad Request):
 ```json
