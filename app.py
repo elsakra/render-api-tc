@@ -9,7 +9,6 @@ import json
 from datetime import datetime
 import threading
 from collections import deque
-import requests
 import traceback
 
 app = Flask(__name__)
@@ -446,18 +445,8 @@ def predict_raw():
         # Make prediction - model's pipeline will handle everything
         proba = model.predict_proba(df)[0][1]
         
-        # For comparison, also show what the normal endpoint would give
-        normal_response = requests.post(
-            'http://localhost:5000/predict',
-            json=data
-        ).json() if request.host.startswith('localhost') else None
-        
         response_data = {
             'probability_closed_won': round(proba, 4),
-            'comparison': {
-                'raw_endpoint': round(proba, 4),
-                'normal_endpoint': normal_response.get('probability_closed_won') if normal_response else 'N/A'
-            },
             'debug_info': {
                 'features_received': len([k for k in data if k in feature_names]),
                 'features_used': len(features),
