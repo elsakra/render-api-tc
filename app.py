@@ -378,17 +378,17 @@ def predict():
             # Use dynamic thresholds from recent predictions
             tier = assign_tier_dynamic(proba, dynamic_thresholds)
         else:
-            # Fall back to original static thresholds
+            # Updated thresholds based on 120,195 accounts (July 14, 2025)
             if employees >= 3000:
-                tier = 'A' if proba > 0.1704 else 'B' if proba > 0.0577 else 'C' if proba > 0.0532 else 'D'
+                tier = 'A' if proba > 0.1237 else 'B' if proba > 0.0534 else 'C' if proba > 0.0419 else 'D'
             elif employees >= 1000:
-                tier = 'A' if proba > 0.1479 else 'B' if proba > 0.0614 else 'C' if proba > 0.0499 else 'D'
+                tier = 'A' if proba > 0.0825 else 'B' if proba > 0.0499 else 'C' if proba > 0.0117 else 'D'
             elif employees >= 300:
-                tier = 'A' if proba > 0.1479 else 'B' if proba > 0.0799 else 'C' if proba > 0.0552 else 'D'
+                tier = 'A' if proba > 0.1296 else 'B' if proba > 0.0552 else 'C' if proba > 0.0334 else 'D'
             elif employees >= 100:
-                tier = 'A' if proba > 0.2174 else 'B' if proba > 0.1286 else 'C' if proba > 0.0577 else 'D'
+                tier = 'A' if proba > 0.2002 else 'B' if proba > 0.0865 else 'C' if proba > 0.0534 else 'D'
             else:
-                tier = 'A' if proba > 0.1986 else 'B' if proba > 0.1249 else 'C' if proba > 0.0577 else 'D'
+                tier = 'A' if proba > 0.2638 else 'B' if proba > 0.1307 else 'C' if proba > 0.0577 else 'D'
         
         # Get simple explanation factors
         explanation = get_simple_explanation(features, proba, tier)
