@@ -284,16 +284,22 @@ def predict():
         else:
             employees = 0  # Default if both are missing
         
+        # Updated thresholds based on actual distribution of new accounts (July 2024)
         if employees >= 3000:
+            # Keep original for now - need more data
             tier = 'A' if proba > 0.1704 else 'B' if proba > 0.0577 else 'C' if proba > 0.0532 else 'D'
         elif employees >= 1000:
+            # Keep original for now - need more data
             tier = 'A' if proba > 0.1479 else 'B' if proba > 0.0614 else 'C' if proba > 0.0499 else 'D'
         elif employees >= 300:
+            # Keep original for now - need more data
             tier = 'A' if proba > 0.1479 else 'B' if proba > 0.0799 else 'C' if proba > 0.0552 else 'D'
         elif employees >= 100:
+            # Keep original for now - need more data
             tier = 'A' if proba > 0.2174 else 'B' if proba > 0.1286 else 'C' if proba > 0.0577 else 'D'
         else:
-            tier = 'A' if proba > 0.1986 else 'B' if proba > 0.1249 else 'C' if proba > 0.0577 else 'D'
+            # Updated based on actual distribution of 0627 accounts
+            tier = 'A' if proba > 0.5137 else 'B' if proba > 0.4705 else 'C' if proba > 0.3529 else 'D'
         
         response_data = {
             'probability_closed_won': round(proba, 4),
@@ -538,16 +544,22 @@ def predict_with_explanation():
         else:
             employees = 0  # Default if both are missing
             
+        # Updated thresholds based on actual distribution of new accounts (July 2024)
         if employees >= 3000:
+            # Keep original for now - need more data
             tier = 'A' if proba > 0.1704 else 'B' if proba > 0.0577 else 'C' if proba > 0.0532 else 'D'
         elif employees >= 1000:
+            # Keep original for now - need more data
             tier = 'A' if proba > 0.1479 else 'B' if proba > 0.0614 else 'C' if proba > 0.0499 else 'D'
         elif employees >= 300:
+            # Keep original for now - need more data
             tier = 'A' if proba > 0.1479 else 'B' if proba > 0.0799 else 'C' if proba > 0.0552 else 'D'
         elif employees >= 100:
+            # Keep original for now - need more data
             tier = 'A' if proba > 0.2174 else 'B' if proba > 0.1286 else 'C' if proba > 0.0577 else 'D'
         else:
-            tier = 'A' if proba > 0.1986 else 'B' if proba > 0.1249 else 'C' if proba > 0.0577 else 'D'
+            # Updated based on actual distribution of 0627 accounts
+            tier = 'A' if proba > 0.5137 else 'B' if proba > 0.4705 else 'C' if proba > 0.3529 else 'D'
         
         # Get explanations
         explanations = get_prediction_explanation(features, proba, tier)
