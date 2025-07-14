@@ -9,6 +9,8 @@ import json
 from datetime import datetime
 import threading
 from collections import deque
+import requests
+import traceback
 
 app = Flask(__name__)
 
@@ -358,16 +360,24 @@ def predict():
             employees = 0
         
         # Assign tier based on employee count and quartiles
-        if employees >= 3000:
-            tier = 'A' if proba > 0.1704 else 'B' if proba > 0.0577 else 'C' if proba > 0.0532 else 'D'
-        elif employees >= 1000:
-            tier = 'A' if proba > 0.1479 else 'B' if proba > 0.0614 else 'C' if proba > 0.0499 else 'D'
-        elif employees >= 300:
-            tier = 'A' if proba > 0.1479 else 'B' if proba > 0.0799 else 'C' if proba > 0.0552 else 'D'
-        elif employees >= 100:
-            tier = 'A' if proba > 0.2174 else 'B' if proba > 0.1286 else 'C' if proba > 0.0577 else 'D'
+        # Use dynamic thresholds based on recent predictions if available
+        dynamic_thresholds = get_dynamic_tier_thresholds(employees)
+        
+        if dynamic_thresholds:
+            # Use dynamic thresholds from recent predictions
+            tier = assign_tier_dynamic(proba, dynamic_thresholds)
         else:
-            tier = 'A' if proba > 0.1986 else 'B' if proba > 0.1249 else 'C' if proba > 0.0577 else 'D'
+            # Fall back to original static thresholds
+            if employees >= 3000:
+                tier = 'A' if proba > 0.1704 else 'B' if proba > 0.0577 else 'C' if proba > 0.0532 else 'D'
+            elif employees >= 1000:
+                tier = 'A' if proba > 0.1479 else 'B' if proba > 0.0614 else 'C' if proba > 0.0499 else 'D'
+            elif employees >= 300:
+                tier = 'A' if proba > 0.1479 else 'B' if proba > 0.0799 else 'C' if proba > 0.0552 else 'D'
+            elif employees >= 100:
+                tier = 'A' if proba > 0.2174 else 'B' if proba > 0.1286 else 'C' if proba > 0.0577 else 'D'
+            else:
+                tier = 'A' if proba > 0.1986 else 'B' if proba > 0.1249 else 'C' if proba > 0.0577 else 'D'
         
         # Get simple explanation factors
         explanation = get_simple_explanation(features, proba, tier)
@@ -388,6 +398,78 @@ def predict():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/predict-raw', methods=['POST'])
+def predict_raw():
+    """Test endpoint that bypasses Clay-specific preprocessing"""
+    try:
+        data = request.get_json()
+        
+        # Normalize field names to handle both snake_case and Title Case
+        data = normalize_field_names(data)
+        
+        # Check required fields
+        required = ['Global Employees', 'Eligible Employees', 'Industry']
+        for field in required:
+            if field not in data:
+                return jsonify({'error': f'Missing: {field}'}), 400
+        
+        # Feature names expected by model
+        feature_names = [
+            'Territory', 'Industry', 'Billing State/Province', 'Type', 'Vertical',
+            'Are they using a Competitor?', 'Web Technologies', 'Company Payroll Software',
+            'Marketing Source', 'Strategic Account',
+            'Global Employees', 'Eligible Employees', 'Predicted Eligible Employees',
+            'Revenue in Last 30 Days'
+        ]
+        
+        # Create raw feature dict - NO PREPROCESSING
+        features = {}
+        for feature in feature_names:
+            if feature in data:
+                value = data[feature]
+                # Only include if not None
+                if value is not None:
+                    # For numeric fields, ensure they're numeric
+                    if feature in ['Global Employees', 'Eligible Employees', 'Predicted Eligible Employees', 'Revenue in Last 30 Days']:
+                        try:
+                            features[feature] = float(value)
+                        except (ValueError, TypeError):
+                            # If can't convert, let model handle it as missing
+                            pass
+                    else:
+                        features[feature] = value
+        
+        # Create DataFrame with proper column order
+        df = pd.DataFrame([features], columns=feature_names)
+        
+        # Make prediction - model's pipeline will handle everything
+        proba = model.predict_proba(df)[0][1]
+        
+        # For comparison, also show what the normal endpoint would give
+        normal_response = requests.post(
+            'http://localhost:5000/predict',
+            json=data
+        ).json() if request.host.startswith('localhost') else None
+        
+        response_data = {
+            'probability_closed_won': round(proba, 4),
+            'comparison': {
+                'raw_endpoint': round(proba, 4),
+                'normal_endpoint': normal_response.get('probability_closed_won') if normal_response else 'N/A'
+            },
+            'debug_info': {
+                'features_received': len([k for k in data if k in feature_names]),
+                'features_used': len(features),
+                'numeric_features': {k: v for k, v in features.items() if k in ['Global Employees', 'Eligible Employees']}
+            },
+            'status': 'success'
+        }
+        
+        return jsonify(response_data)
+        
+    except Exception as e:
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
 
 @app.route('/health', methods=['GET'])
 def health():
