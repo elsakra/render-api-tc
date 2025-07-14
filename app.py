@@ -12,6 +12,31 @@ app = Flask(__name__)
 with open('tapcheck_v4_model.pkl', 'rb') as f:
     model = pickle.load(f)
 
+def clean_value(value, default=None):
+    """Clean incoming values, treating hyphens as null/missing"""
+    # Handle various representations of missing data
+    if value is None:
+        return default
+    
+    # Convert to string to check for hyphen patterns
+    str_value = str(value).strip()
+    
+    # Check for hyphen or common missing data indicators
+    if str_value in ['-', '--', 'null', 'NULL', 'None', 'none', '']:
+        return default
+    
+    # For numeric fields, also check if it's a valid number
+    if default == 0:  # Numeric field
+        try:
+            # Try to convert to number, but still check for hyphen first
+            if str_value == '-':
+                return default
+            return float(str_value)
+        except (ValueError, TypeError):
+            return default
+    
+    return value
+
 def render_markdown_as_html(markdown_file):
     """Convert markdown file to HTML with styling"""
     try:
@@ -169,23 +194,31 @@ def predict():
             if field not in data:
                 return jsonify({'error': f'Missing: {field}'}), 400
         
-        # Prepare all 14 features
+        # Prepare all 14 features with hyphen handling
         features = {
-            'Global Employees': data.get('Global Employees', 0),
-            'Eligible Employees': data.get('Eligible Employees', 0),
-            'Predicted Eligible Employees': data.get('Predicted Eligible Employees', 0),
-            'Revenue in Last 30 Days': data.get('Revenue in Last 30 Days', 0),
-            'Territory': data.get('Territory', 'missing'),
-            'Industry': data.get('Industry', 'missing'),
-            'Billing State/Province': data.get('Billing State/Province', 'missing'),
-            'Type': data.get('Type', 'missing'),
-            'Vertical': data.get('Vertical', 'missing'),
-            'Are they using a Competitor?': data.get('Are they using a Competitor?', 'missing'),
-            'Web Technologies': data.get('Web Technologies', 'missing'),
-            'Company Payroll Software': data.get('Company Payroll Software', 'missing'),
-            'Marketing Source': data.get('Marketing Source', 'missing'),
-            'Strategic Account': data.get('Strategic Account', 'missing')
+            'Global Employees': clean_value(data.get('Global Employees'), 0),
+            'Eligible Employees': clean_value(data.get('Eligible Employees'), 0),
+            'Predicted Eligible Employees': clean_value(data.get('Predicted Eligible Employees'), 0),
+            'Revenue in Last 30 Days': clean_value(data.get('Revenue in Last 30 Days'), 0),
+            'Territory': clean_value(data.get('Territory'), 'missing'),
+            'Industry': clean_value(data.get('Industry'), 'missing'),
+            'Billing State/Province': clean_value(data.get('Billing State/Province'), 'missing'),
+            'Type': clean_value(data.get('Type'), 'missing'),
+            'Vertical': clean_value(data.get('Vertical'), 'missing'),
+            'Are they using a Competitor?': clean_value(data.get('Are they using a Competitor?'), 'missing'),
+            'Web Technologies': clean_value(data.get('Web Technologies'), 'missing'),
+            'Company Payroll Software': clean_value(data.get('Company Payroll Software'), 'missing'),
+            'Marketing Source': clean_value(data.get('Marketing Source'), 'missing'),
+            'Strategic Account': clean_value(data.get('Strategic Account'), 'missing')
         }
+        
+        # Validate required fields aren't just hyphens
+        if features['Global Employees'] == 0 and data.get('Global Employees') == '-':
+            return jsonify({'error': 'Global Employees cannot be empty (hyphen)'}), 400
+        if features['Eligible Employees'] == 0 and data.get('Eligible Employees') == '-':
+            return jsonify({'error': 'Eligible Employees cannot be empty (hyphen)'}), 400
+        if features['Industry'] == 'missing' and data.get('Industry') == '-':
+            return jsonify({'error': 'Industry cannot be empty (hyphen)'}), 400
         
         # Make prediction
         df = pd.DataFrame([features])

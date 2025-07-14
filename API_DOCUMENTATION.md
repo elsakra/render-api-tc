@@ -60,6 +60,19 @@ Generate a conversion probability prediction for a potential customer.
 - `Company Payroll Software` (string, default: "missing") - Current payroll software
 - `Marketing Source` (string, default: "missing") - How they heard about us
 - `Strategic Account` (string, default: "missing") - Strategic account status
+
+#### Hyphen Handling
+
+The API automatically handles hyphens (`-`) as missing values, which is common in Salesforce data exports. The following values are treated as null/missing:
+- `-` (single hyphen)
+- `--` (double hyphen)
+- `null`, `NULL`, `None`, `none`
+- Empty strings
+
+For numeric fields, these values will be converted to `0`. For string fields, they will be converted to `"missing"`.
+
+**Note**: Required fields (`Global Employees`, `Eligible Employees`, `Industry`) cannot be hyphens and will return an error if only a hyphen is provided.
+
 #### Response
 
 **Success Response** (200 OK):
