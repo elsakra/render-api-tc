@@ -80,14 +80,14 @@ def clean_value(value, default=None):
         return default
     
     # For numeric fields, try to convert any value to a number
-    if default == 0:  # Numeric field
+    if pd.isna(default):  # Numeric field (np.nan as default)
         try:
             # This will handle both actual numbers and string representations of numbers
             # e.g., 100 → 100.0, "100" → 100.0, "100.5" → 100.5
             return float(str_value)
         except (ValueError, TypeError):
-            # If conversion fails, return the default
-            return default
+            # If conversion fails, return NaN for proper imputation
+            return np.nan
     
     # For non-numeric fields, return the original value
     return value
@@ -119,6 +119,7 @@ def render_markdown_as_html(markdown_file):
                     padding: 20px;
                     background-color: #f5f5f5;
                 }}
+                
                 .content {{
                     background-color: white;
                     padding: 40px;
@@ -251,10 +252,10 @@ def predict():
         
         # Prepare all 14 features with hyphen handling
         features = {
-            'Global Employees': clean_value(data.get('Global Employees'), 0),
-            'Eligible Employees': clean_value(data.get('Eligible Employees'), 0),
-            'Predicted Eligible Employees': clean_value(data.get('Predicted Eligible Employees'), 0),
-            'Revenue in Last 30 Days': clean_value(data.get('Revenue in Last 30 Days'), 0),
+            'Global Employees': clean_value(data.get('Global Employees'), np.nan),
+            'Eligible Employees': clean_value(data.get('Eligible Employees'), np.nan),
+            'Predicted Eligible Employees': clean_value(data.get('Predicted Eligible Employees'), np.nan),
+            'Revenue in Last 30 Days': clean_value(data.get('Revenue in Last 30 Days'), np.nan),
             'Territory': clean_value(data.get('Territory'), 'missing'),
             'Industry': clean_value(data.get('Industry'), 'Other') if data.get('Industry') == '-' else data.get('Industry', 'missing'),
             'Billing State/Province': clean_value(data.get('Billing State/Province'), 'missing'),

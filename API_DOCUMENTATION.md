@@ -69,7 +69,7 @@ The API automatically handles hyphens (`-`) as missing values, which is common i
 - `null`, `NULL`, `None`, `none`
 - Empty strings
 
-For numeric fields, these values will be converted to `0`. For string fields, they will be converted to `"missing"`.
+For numeric fields, these values will be converted to `NaN` (which allows the model's imputer to use median values). For string fields, they will be converted to `"missing"`.
 
 **Quoted Numbers**: The API intelligently handles quoted numbers in numeric fields. For example:
 - `"Predicted Eligible Employees": "100"` → converted to `100`
