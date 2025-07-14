@@ -41,25 +41,31 @@ Generate a conversion probability prediction for a potential customer with expla
 
 #### Request Body
 
+**Field Name Formats**: The API accepts field names in both formats:
+- **Title Case with spaces**: `"Global Employees"`, `"Eligible Employees"` (original format)
+- **snake_case**: `"global_employees"`, `"eligible_employees"` (Clay/integration format)
+
+Both formats work identically. You can even mix formats in the same request.
+
 **Required Fields**:
 
-- `Global Employees` (integer) - Total number of employees globally
-- `Eligible Employees` (integer) - Number of employees eligible for the service
-- `Industry` (string) - Company's primary industry
+- `Global Employees` or `global_employees` (integer) - Total number of employees globally
+- `Eligible Employees` or `eligible_employees` (integer) - Number of employees eligible for the service
+- `Industry` or `industry` (string) - Company's primary industry
 
 **Optional Fields**:
 
-- `Predicted Eligible Employees` (integer, default: 0) - Estimated eligible employees
-- `Revenue in Last 30 Days` (integer, default: 0) - Revenue in the last 30 days
-- `Territory` (string, default: "missing") - Geographic territory
-- `Billing State/Province` (string, default: "missing") - Billing location
-- `Type` (string, default: "missing") - Company type (e.g., "Enterprise", "SMB")
-- `Vertical` (string, default: "missing") - Business vertical
-- `Are they using a Competitor?` (string, default: "missing") - Competitor usage status
-- `Web Technologies` (string, default: "missing") - Technologies used
-- `Company Payroll Software` (string, default: "missing") - Current payroll software
-- `Marketing Source` (string, default: "missing") - How they heard about us
-- `Strategic Account` (string, default: "missing") - Strategic account status
+- `Predicted Eligible Employees` or `predicted_eligible_employees` (integer, default: 0) - Estimated eligible employees
+- `Revenue in Last 30 Days` or `revenue_in_last_30_days` (integer, default: 0) - Revenue in the last 30 days
+- `Territory` or `territory` (string, default: "missing") - Geographic territory
+- `Billing State/Province` or `billing_state_province` (string, default: "missing") - Billing location
+- `Type` or `type` (string, default: "missing") - Company type (e.g., "Enterprise", "SMB")
+- `Vertical` or `vertical` (string, default: "missing") - Business vertical
+- `Are they using a Competitor?` or `are_they_using_a_competitor` (string, default: "missing") - Competitor usage status
+- `Web Technologies` or `web_technologies` (string, default: "missing") - Technologies used
+- `Company Payroll Software` or `company_payroll_software` (string, default: "missing") - Current payroll software
+- `Marketing Source` or `marketing_source` (string, default: "missing") - How they heard about us
+- `Strategic Account` or `strategic_account` (string, default: "missing") - Strategic account status
 
 #### Hyphen Handling
 
@@ -165,7 +171,22 @@ curl -X POST https://render-api-tc.onrender.com/predict \
   }'
 ```
 
-### Example 2: Full Request
+### Example 2: Clay Format (snake_case)
+```bash
+curl -X POST https://render-api-tc.onrender.com/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "global_employees": "150",
+    "eligible_employees": "120",
+    "industry": "Technology",
+    "territory": "North America",
+    "type": "SMB"
+  }'
+```
+
+Note: Clay often sends numeric values as strings (e.g., `"150"`). The API handles this automatically.
+
+### Example 3: Full Request
 ```bash
 curl -X POST https://render-api-tc.onrender.com/predict \
   -H "Content-Type: application/json" \
@@ -187,7 +208,7 @@ curl -X POST https://render-api-tc.onrender.com/predict \
   }'
 ```
 
-### Example 3: Python Request
+### Example 4: Python Request
 ```python
 import requests
 import json
@@ -208,7 +229,7 @@ print(f"Probability: {result['probability_closed_won']}")
 print(f"Tier: {result['tier']} - {result['tier_description']}")
 ```
 
-### Example 4: JavaScript/Node.js Request
+### Example 5: JavaScript/Node.js Request
 ```javascript
 const axios = require('axios');
 

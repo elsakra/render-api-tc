@@ -32,6 +32,54 @@ try:
 except Exception as e:
     print(f"Could not load existing logs: {e}")
 
+def normalize_field_names(data):
+    """Normalize field names to handle both snake_case and Title Case formats"""
+    # Mapping from various formats to expected format
+    field_mappings = {
+        # snake_case to Title Case
+        'global_employees': 'Global Employees',
+        'eligible_employees': 'Eligible Employees',
+        'predicted_eligible_employees': 'Predicted Eligible Employees',
+        'revenue_in_last_30_days': 'Revenue in Last 30 Days',
+        'territory': 'Territory',
+        'industry': 'Industry',
+        'billing_state_province': 'Billing State/Province',
+        'type': 'Type',
+        'vertical': 'Vertical',
+        'are_they_using_a_competitor': 'Are they using a Competitor?',
+        'web_technologies': 'Web Technologies',
+        'company_payroll_software': 'Company Payroll Software',
+        'marketing_source': 'Marketing Source',
+        'strategic_account': 'Strategic Account',
+        # Also handle exact matches (case-insensitive)
+        'billing state/province': 'Billing State/Province',
+        'are they using a competitor?': 'Are they using a Competitor?',
+    }
+    
+    # Create normalized data dictionary
+    normalized = {}
+    
+    # First, copy over any fields that are already in the correct format
+    for key, value in data.items():
+        normalized[key] = value
+    
+    # Then, check for fields that need to be mapped
+    for key, value in data.items():
+        # Check direct mapping (case-insensitive)
+        lower_key = key.lower()
+        if lower_key in field_mappings:
+            correct_key = field_mappings[lower_key]
+            normalized[correct_key] = value
+        # Also handle case where it's already correct but different case
+        elif key.lower() in [k.lower() for k in field_mappings.values()]:
+            # Find the correct casing
+            for correct_key in field_mappings.values():
+                if key.lower() == correct_key.lower():
+                    normalized[correct_key] = value
+                    break
+    
+    return normalized
+
 def save_logs():
     """Save logs to file"""
     try:
@@ -244,6 +292,9 @@ def openapi_spec():
 def predict():
     try:
         data = request.get_json()
+        
+        # Normalize field names to handle both snake_case and Title Case
+        data = normalize_field_names(data)
         
         # Check required fields
         required = ['Global Employees', 'Eligible Employees', 'Industry']
