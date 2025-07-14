@@ -293,6 +293,18 @@ def openapi_spec():
     except:
         return jsonify({'error': 'OpenAPI spec not found'}), 404
 
+def get_dynamic_tier_thresholds(employees):
+    """Get dynamic tier thresholds based on recent predictions"""
+    # TODO: Implement dynamic threshold calculation based on prediction logs
+    # For now, return None to use static thresholds
+    return None
+
+def assign_tier_dynamic(proba, thresholds):
+    """Assign tier based on dynamic thresholds"""
+    # TODO: Implement dynamic tier assignment
+    # This function would use the calculated thresholds to assign tiers
+    return None
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
