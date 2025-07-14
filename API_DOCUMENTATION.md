@@ -31,9 +31,9 @@ Verify the API is running and the model is loaded.
 curl -X GET https://render-api-tc.onrender.com/health
 ```
 
-### 2. Prediction
+### 2. Prediction with Explanation
 
-Generate a conversion probability prediction for a potential customer.
+Generate a conversion probability prediction for a potential customer with explanation factors.
 
 **Endpoint**: `POST /predict`
 
@@ -91,6 +91,11 @@ This allows you to safely quote all values in your JSON to handle hyphens withou
     "tier": "A",
     "tier_description": "Top 25%",
     "employee_count": 400,
+    "explanation": [
+        "Healthcare industry (43.7% historical win rate)",
+        "Viventium integration (81.7% success rate)",
+        "Not using competitor"
+    ],
     "status": "success"
 }
 ```
@@ -101,6 +106,7 @@ This allows you to safely quote all values in your JSON to handle hyphens withou
 - `tier` (string)  - Tier classification (A, B, C, or D)
 - `tier_description` (string) - Human-readable tier description
 - `employee_count` (integer) - Employee count used for classification
+- `explanation` (array) - List of factors affecting the prediction
 - `status` (string) - Request status
 
 **Error Response** (400 Bad Request):
@@ -110,86 +116,7 @@ This allows you to safely quote all values in your JSON to handle hyphens withou
 }
 ```
 
-### 2.5 Prediction with Explanation (NEW)
 
-Generate a prediction with detailed explanations of contributing factors.
-
-**Endpoint**: `POST /predict-with-explanation`
-
-**Content-Type**: `application/json`
-
-#### Request Body
-
-Same as `/predict` endpoint - requires `Global Employees`, `Eligible Employees`, and `Industry`.
-
-#### Response
-
-**Success Response** (200 OK):
-```json
-{
-    "probability_closed_won": 0.7532,
-    "tier": "A",
-    "tier_description": "Top 25%",
-    "employee_count": 250,
-    "explanation": {
-        "summary": "Excellent prospect with 75.3% win probability (Top 25%)",
-        "factors": [
-            {
-                "factor": "Industry",
-                "impact": "very_positive",
-                "detail": "Healthcare has 43.7% historical win rate"
-            },
-            {
-                "factor": "Payroll System",
-                "impact": "very_positive",
-                "detail": "Viventium integration has 81.7% success rate"
-            },
-            {
-                "factor": "Company Size",
-                "impact": "positive",
-                "detail": "Mid-market company with 250 employees"
-            },
-            {
-                "factor": "Competition",
-                "impact": "positive",
-                "detail": "Not using a competitor solution"
-            },
-            {
-                "factor": "Territory",
-                "impact": "negative",
-                "detail": "Enterprise territory has lower conversion (11.4%)"
-            }
-        ],
-        "recommendations": [
-            "Prioritize immediate outreach",
-            "Assign to senior sales rep",
-            "Emphasize Viventium integration success stories"
-        ]
-    },
-    "status": "success"
-}
-```
-
-**Impact Levels**:
-- `very_positive`: Strong positive indicator (e.g., high-converting industry/payroll)
-- `positive`: Moderate positive indicator
-- `neutral`: Neither positive nor negative
-- `negative`: Moderate negative indicator
-- `very_negative`: Strong negative indicator (e.g., problematic payroll system)
-
-**Example Request**:
-```bash
-curl -X POST https://render-api-tc.onrender.com/predict-with-explanation \
-  -H "Content-Type: application/json" \
-  -d '{
-    "Global Employees": 250,
-    "Eligible Employees": 200,
-    "Industry": "Healthcare",
-    "Company Payroll Software": "Viventium",
-    "Territory": "Enterprise Territory",
-    "Are they using a Competitor?": "No"
-  }'
-```
 
 ## Tier Classification
 
