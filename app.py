@@ -41,17 +41,18 @@ def save_logs():
     except Exception as e:
         print(f"Error saving logs: {e}")
 
-def log_prediction(request_data, response_data, employee_count):
+def log_prediction(request_data, response_data, employee_count, features_dict=None):
     """Log a prediction request and response"""
     log_entry = {
         'timestamp': datetime.utcnow().isoformat(),
-        'request': {
+        'request_from_clay': {
             'global_employees': request_data.get('Global Employees'),
             'eligible_employees': request_data.get('Eligible Employees'),
             'industry': request_data.get('Industry'),
             'territory': request_data.get('Territory'),
             'type': request_data.get('Type')
         },
+        'all_features_used': features_dict if features_dict else {},
         'response': {
             'probability': response_data['probability_closed_won'],
             'tier': response_data['tier'],
@@ -307,7 +308,8 @@ def predict():
             'status': 'success'
         }
         
-        log_prediction(data, response_data, employees)
+        # Log with all features that were actually used
+        log_prediction(data, response_data, employees, features)
         
         return jsonify(response_data)
         
