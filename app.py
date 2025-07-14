@@ -306,40 +306,58 @@ def predict():
             if field not in data:
                 return jsonify({'error': f'Missing: {field}'}), 400
         
-        # Prepare all 14 features with hyphen handling
-        features = {
-            'Global Employees': clean_value(data.get('Global Employees'), np.nan, 'Global Employees'),
-            'Eligible Employees': clean_value(data.get('Eligible Employees'), np.nan, 'Eligible Employees'),
-            'Predicted Eligible Employees': clean_value(data.get('Predicted Eligible Employees'), np.nan, 'Predicted Eligible Employees'),
-            'Revenue in Last 30 Days': clean_value(data.get('Revenue in Last 30 Days'), np.nan, 'Revenue in Last 30 Days'),
-            'Territory': clean_value(data.get('Territory'), 'missing'),
-            'Industry': clean_value(data.get('Industry'), 'Other') if data.get('Industry') == '-' else data.get('Industry', 'missing'),
-            'Billing State/Province': clean_value(data.get('Billing State/Province'), 'missing'),
-            'Type': clean_value(data.get('Type'), 'missing'),
-            'Vertical': clean_value(data.get('Vertical'), 'missing'),
-            'Are they using a Competitor?': clean_value(data.get('Are they using a Competitor?'), 'missing'),
-            'Web Technologies': clean_value(data.get('Web Technologies'), 'missing'),
-            'Company Payroll Software': clean_value(data.get('Company Payroll Software'), 'missing'),
-            'Marketing Source': clean_value(data.get('Marketing Source'), 'missing'),
-            'Strategic Account': clean_value(data.get('Strategic Account'), 'missing')
-        }
+        # Prepare features WITHOUT preprocessing - let the model's pipeline handle it
+        # The model expects these exact column names in this order
+        feature_names = [
+            'Territory', 'Industry', 'Billing State/Province', 'Type', 'Vertical',
+            'Are they using a Competitor?', 'Web Technologies', 'Company Payroll Software',
+            'Marketing Source', 'Strategic Account',
+            'Global Employees', 'Eligible Employees', 'Predicted Eligible Employees',
+            'Revenue in Last 30 Days'
+        ]
         
-        # Make prediction
-        df = pd.DataFrame([features])
+        # Create raw feature dict - pass exactly what we receive
+        features = {}
+        for feature in feature_names:
+            value = data.get(feature)
+            
+            # Special handling for Clay's data format
+            if isinstance(value, str):
+                # Handle Clay's "0" for eligible employees
+                if feature == 'Eligible Employees' and value == "0":
+                    value = None
+                # Handle comma-separated numbers
+                elif feature in ['Global Employees', 'Eligible Employees', 'Predicted Eligible Employees', 'Revenue in Last 30 Days']:
+                    try:
+                        # Remove commas and convert to float
+                        value = float(str(value).replace(',', ''))
+                    except (ValueError, TypeError):
+                        value = None
+                # Handle hyphen as missing
+                elif value in ['-', '--']:
+                    value = None
+            
+            features[feature] = value
+        
+        # Create DataFrame with proper column order
+        df = pd.DataFrame([features], columns=feature_names)
+        
+        # Make prediction - model's pipeline will handle imputation and encoding
         proba = model.predict_proba(df)[0][1]
         
-        # Assign tier based on employee count and quartiles
-        # Handle NaN values properly
-        eligible = features['Eligible Employees']
-        global_emp = features['Global Employees']
+        # Determine employee count for tier assignment
+        eligible = features.get('Eligible Employees')
+        global_emp = features.get('Global Employees')
         
-        if pd.notna(eligible):
+        # Use eligible if available and not None/0, otherwise use global
+        if eligible and eligible > 0:
             employees = eligible
-        elif pd.notna(global_emp):
+        elif global_emp and global_emp > 0:
             employees = global_emp
         else:
-            employees = 0  # Default if both are missing
+            employees = 0
         
+        # Assign tier based on employee count and quartiles
         if employees >= 3000:
             tier = 'A' if proba > 0.1704 else 'B' if proba > 0.0577 else 'C' if proba > 0.0532 else 'D'
         elif employees >= 1000:
@@ -381,13 +399,13 @@ def get_simple_explanation(features, proba, tier):
     factors = []
     
     # Employee size
-    employees = features.get('Eligible Employees', 0) or features.get('Global Employees', 0)
+    employees = features.get('Eligible Employees', 0) or features.get('Global Employees', 0) or 0
     if employees > 3000:
-        factors.append(f'Large enterprise ({employees:,} employees)')
+        factors.append(f'Large enterprise ({employees:,.0f} employees)')
     elif employees > 1000:
-        factors.append(f'Mid-market company ({employees:,} employees)')
-    elif employees < 50:
-        factors.append(f'Small company ({employees} employees)')
+        factors.append(f'Mid-market company ({employees:,.0f} employees)')
+    elif employees < 50 and employees > 0:
+        factors.append(f'Small company ({employees:.0f} employees)')
     
     # Industry with win rates
     industry = features.get('Industry', 'missing')
@@ -430,29 +448,30 @@ def get_simple_explanation(features, proba, tier):
         'Kronos': 15.4
     }
     
-    if payroll in excellent_payroll:
+    if payroll and payroll in excellent_payroll:
         factors.append(f'{payroll} integration ({excellent_payroll[payroll]:.1f}% success rate)')
-    elif payroll in poor_payroll:
+    elif payroll and payroll in poor_payroll:
         factors.append(f'{payroll} integration ({poor_payroll[payroll]:.1f}% success rate)')
     elif payroll == 'ADP':
         factors.append('ADP integration (37.1% win rate)')
     
     # Territory
     territory = features.get('Territory', 'missing')
-    if territory == 'missing':
+    if territory == 'missing' or territory is None:
         factors.append('Unassigned territory (48.5% win rate)')
     elif territory == 'Enterprise Territory':
         factors.append('Enterprise territory (11.4% win rate)')
     
     # Strategic account
-    if str(features.get('Strategic Account', '')).lower() == 'yes':
+    strategic = features.get('Strategic Account', '')
+    if strategic and str(strategic).lower() == 'yes':
         factors.append('Strategic account flag')
     
     # Competitor
-    competitor = str(features.get('Are they using a Competitor?', 'missing')).lower()
-    if competitor == 'no':
+    competitor = features.get('Are they using a Competitor?', 'missing')
+    if competitor and str(competitor).lower() == 'no':
         factors.append('Not using competitor')
-    elif competitor == 'yes':
+    elif competitor and str(competitor).lower() == 'yes':
         factors.append('Currently using competitor')
     
     return factors
