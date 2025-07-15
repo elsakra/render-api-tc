@@ -313,8 +313,8 @@ def predict():
         # Normalize field names to handle both snake_case and Title Case
         data = normalize_field_names(data)
         
-        # Check required fields
-        required = ['Global Employees', 'Eligible Employees', 'Industry']
+        # Check required fields - only Global Employees is truly required
+        required = ['Global Employees']
         for field in required:
             if field not in data:
                 return jsonify({'error': f'Missing: {field}'}), 400
@@ -329,11 +329,14 @@ def predict():
             'Revenue in Last 30 Days'
         ]
         
-        # Create raw feature dict - pass exactly what we receive
+        # Create raw feature dict - handle missing fields like pandas CSV reader
         features = {}
         for feature in feature_names:
-            value = data.get(feature)
-            features[feature] = value
+            if feature in data:
+                features[feature] = data[feature]
+            else:
+                # Missing fields become NaN, just like pandas reads empty CSV cells
+                features[feature] = np.nan
         
         # Create DataFrame with proper column order
         df = pd.DataFrame([features], columns=feature_names)
