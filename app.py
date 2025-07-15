@@ -333,23 +333,6 @@ def predict():
         features = {}
         for feature in feature_names:
             value = data.get(feature)
-            
-            # Special handling for Clay's data format
-            if isinstance(value, str):
-                # Handle Clay's "0" for eligible employees
-                if feature == 'Eligible Employees' and value == "0":
-                    value = None
-                # Handle comma-separated numbers
-                elif feature in ['Global Employees', 'Eligible Employees', 'Predicted Eligible Employees', 'Revenue in Last 30 Days']:
-                    try:
-                        # Remove commas and convert to float
-                        value = float(str(value).replace(',', ''))
-                    except (ValueError, TypeError):
-                        value = None
-                # Handle hyphen as missing
-                elif value in ['-', '--']:
-                    value = None
-            
             features[feature] = value
         
         # Create DataFrame with proper column order
