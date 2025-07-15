@@ -487,8 +487,10 @@ def get_simple_explanation(features, proba, tier):
         factors.append(f'Large enterprise ({employees:,.0f} employees)')
     elif employees > 1000:
         factors.append(f'Mid-market company ({employees:,.0f} employees)')
-    elif employees < 50 and employees > 0:
+    elif employees > 50:
         factors.append(f'Small company ({employees:.0f} employees)')
+    elif employees > 0:
+        factors.append(f'Micro business ({employees:.0f} employees)')
     
     # Industry with win rates
     industry = features.get('Industry', 'missing')
@@ -556,6 +558,23 @@ def get_simple_explanation(features, proba, tier):
         factors.append('Not using competitor')
     elif competitor and str(competitor).lower() == 'yes':
         factors.append('Currently using competitor')
+    
+    # Add tier-specific assessment
+    tier_assessment = []
+    if tier == 'A':
+        tier_assessment.append(f'Top 25% prospect in this size category (Tier A, {proba:.1%} probability)')
+    elif tier == 'B':
+        tier_assessment.append(f'Above average prospect (Tier B, {proba:.1%} probability)')
+    elif tier == 'C':
+        tier_assessment.append(f'Average prospect (Tier C, {proba:.1%} probability)')
+    else:
+        tier_assessment.append(f'Below average prospect (Tier D, {proba:.1%} probability)')
+    
+    # Combine factors and tier assessment
+    if factors:
+        factors.extend(tier_assessment)
+    else:
+        factors = tier_assessment
     
     return factors
 
