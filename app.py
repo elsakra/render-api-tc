@@ -333,7 +333,12 @@ def predict():
         features = {}
         for feature in feature_names:
             if feature in data:
-                features[feature] = data[feature]
+                value = data[feature]
+                # Treat empty strings as NaN (like pandas does with CSV)
+                if isinstance(value, str) and value.strip() == "":
+                    features[feature] = np.nan
+                else:
+                    features[feature] = value
             else:
                 # Missing fields become NaN, just like pandas reads empty CSV cells
                 features[feature] = np.nan
